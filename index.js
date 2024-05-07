@@ -35,10 +35,10 @@ const logger = async(req, res, next) =>{
 }
 
 const verifyToken = async(req, res, next) => {
-  const token = req.cookies?.token;
+  const token = req?.cookies?.token;
   console.log('value of token in middleware', token)
   if(!token){
-    return res.status(401).send({message: 'nor authorized'})
+    return res.status(401).send({message: 'not authorized'})
   }
   jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) =>{
     // error
@@ -65,15 +65,23 @@ async function run() {
     // auth related api
     app.post('/jwt', logger, async(req, res)=>{
       const user = req.body;
-      console.log(user);
+      console.log('user for token',user);
       const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET , {expiresIn: '1h'})
       res
       .cookie('token', token, {
         httpOnly: true,
-        secure: false,
-        // sameSite: 'none',
+        secure: true,
+        sameSite: 'none',
       })
       .send({success: true});
+    })
+
+    // logout
+    app.post('/logout', async(req, res)=>{
+      const user = req.body;
+      console.log('login out ', user)
+      .clearCookie('token', {maxAge: 0})
+      .send({success: true})
     })
 
     // services related api
